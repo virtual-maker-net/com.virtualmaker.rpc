@@ -17,7 +17,8 @@
     "url": "https://www.virtualmaker.net"
   },
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "2.0.0"
+    "com.unity.nuget.newtonsoft-json": "2.0.0",
+    "com.utilities.async": "2.1.5"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"

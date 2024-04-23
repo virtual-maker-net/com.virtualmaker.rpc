@@ -4,13 +4,12 @@ using NUnit.Framework;
 
 namespace VirtualMaker.RPC.Tests
 {
-    internal class ExampleTestScript
+    internal class TestFixture_01_
     {
         [Test]
-        public void ExampleTestScriptSimplePasses()
+        public void Test_01_()
         {
-            // A Test behaves as an ordinary method
-            // Use the Assert class to test conditions
+            // TODO
         }
     }
 }
