@@ -1,10 +1,10 @@
 {
-    "name": "ProjectScope.ProjectName.Tests",
-    "rootNamespace": "ProjectScope.ProjectName.Tests",
+    "name": "VirtualMaker.RPC.Tests",
+    "rootNamespace": "VirtualMaker.RPC.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "ProjectScope.ProjectName"
+        "VirtualMaker.RPC"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,8 +1,8 @@
 {
-    "name": "ProjectScope.ProjectName.Editor",
-    "rootNamespace": "ProjectScope.ProjectName.Editor",
+    "name": "VirtualMaker.RPC.Editor",
+    "rootNamespace": "VirtualMaker.RPC.Editor",
     "references": [
-        "ProjectScope.ProjectName"
+        "VirtualMaker.RPC"
     ],
     "includePlatforms": [
         "Editor"
