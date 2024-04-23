@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Utilities.Async;
@@ -14,9 +15,9 @@ namespace VirtualMaker.RPC
     /// <summary>
     /// This class lets you communicate between Unity and the browser using RPC over JSON.
     /// Technically it could let you communicate with any remote source by implementing
-    /// IUnityRpcTransport.
+    /// <see cref="IUnityRpcTransport"/>.
     /// </summary>
-    public static class UnityRpc
+    public class UnityRpc : IDisposable
     {
         private struct Message
         {
@@ -33,33 +34,24 @@ namespace VirtualMaker.RPC
             public int? ResponseId { get; set; }
         }
 
-        private static IUnityRpcTransport _transport;
+        private int _rpcId = 1;
 
-        private static Dictionary<string, List<Delegate>> _subscriptions = new();
+        private Dictionary<int, Action<JToken>> _rpcs = new();
 
-        private static Dictionary<int, Action<JToken>> _rpcs = new();
+        private Dictionary<string, List<Delegate>> _subscriptions = new();
 
-        private static int _rpcId = 1;
+        private IUnityRpcTransport _transport;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Initialize()
+        private CancellationTokenSource _cancellationTokenSource;
+
+        public UnityRpc(IUnityRpcTransport transport)
         {
-#if UNITY_WEBGL
-            if (Application.isEditor)
-            {
-                _transport = new UnityRpcTransportWebsocket();
-            }
-            else
-            {
-                _transport = new UnityRpcTransportWebGL();
-            }
-#else
-            _transport = new UnityRpcTransportWebsocket();
-#endif
-            ProcessQueue();
+            _transport = transport;
+            _cancellationTokenSource = new CancellationTokenSource();
+            ProcessQueue(_cancellationTokenSource.Token);
         }
 
-        public static Task<T> CallAsync<T>(string evt, params object[] args)
+        public Task<T> CallAsync<T>(string evt, params object[] args)
         {
             var message = new Message
             {
@@ -79,7 +71,7 @@ namespace VirtualMaker.RPC
             return tcs.Task;
         }
 
-        public static void RaiseEvent(string evt, params object[] args)
+        public void RaiseEvent(string evt, params object[] args)
         {
             var message = new Message
             {
@@ -91,7 +83,7 @@ namespace VirtualMaker.RPC
             _transport.SendMessage(json);
         }
 
-        public static void SubscribeDelegate(string evt, Delegate callback)
+        public void SubscribeDelegate(string evt, Delegate callback)
         {
             if (!_subscriptions.TryGetValue(evt, out var callbacks))
             {
@@ -102,25 +94,37 @@ namespace VirtualMaker.RPC
             callbacks.Add(callback);
         }
 
-        public static void Subscribe<T>(string evt, Action<T> callback)
-            => SubscribeDelegate(evt, callback);
+        public void Subscribe<T>(string evt, Action<T> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void Subscribe<T1, T2>(string evt, Action<T1, T2> callback)
-            => SubscribeDelegate(evt, callback);
+        public void Subscribe<T1, T2>(string evt, Action<T1, T2> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void Subscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
-            => SubscribeDelegate(evt, callback);
+        public void Subscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void CreateRpc<T, TResult>(string evt, Func<T, TResult> callback)
-            => SubscribeDelegate(evt, callback);
+        public void CreateRpc<T, TResult>(string evt, Func<T, TResult> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void CreateRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
-            => SubscribeDelegate(evt, callback);
+        public void CreateRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void CreateRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
-            => SubscribeDelegate(evt, callback);
+        public void CreateRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
+        {
+            SubscribeDelegate(evt, callback);
+        }
 
-        public static void UnsubscribeDelegate(string evt, Delegate callback)
+        public void UnsubscribeDelegate(string evt, Delegate callback)
         {
             if (_subscriptions == null)
             {
@@ -135,27 +139,40 @@ namespace VirtualMaker.RPC
             callbacks.Remove(callback);
         }
 
-        public static void Unsubscribe<T>(string evt, Action<T> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        public static void Unsubscribe<T1, T2>(string evt, Action<T1, T2> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        public static void Unsubscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        public static void RemoveRpc<T, TResult>(string evt, Func<T, TResult> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        public static void RemoveRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        public static void RemoveRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
-            => UnsubscribeDelegate(evt, callback);
-
-        private static async void ProcessQueue()
+        public void Unsubscribe<T>(string evt, Action<T> callback)
         {
-            while (_transport.ReceiveQueue.TryDequeue(out var message))
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        public void Unsubscribe<T1, T2>(string evt, Action<T1, T2> callback)
+        {
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        public void Unsubscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
+        {
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        public void RemoveRpc<T, TResult>(string evt, Func<T, TResult> callback)
+        {
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        public void RemoveRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
+        {
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        public void RemoveRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
+        {
+            UnsubscribeDelegate(evt, callback);
+        }
+
+        private async void ProcessQueue(CancellationToken cancellationToken)
+        {
+            while (_transport.ReceiveQueue.TryDequeue(out var message) &&
+                   !cancellationToken.IsCancellationRequested)
             {
                 await Awaiters.UnityMainThread;
 
@@ -165,8 +182,7 @@ namespace VirtualMaker.RPC
 
                     if (parsed.ResponseId.HasValue)
                     {
-                        if (_rpcs == null ||
-                           !_rpcs.Remove(parsed.ResponseId.Value, out var callback))
+                        if (_rpcs == null || !_rpcs.Remove(parsed.ResponseId.Value, out var callback))
                         {
                             continue;
                         }
@@ -175,8 +191,7 @@ namespace VirtualMaker.RPC
                         continue;
                     }
 
-                    if (_subscriptions == null ||
-                       !_subscriptions.TryGetValue(parsed.Event, out var callbacks))
+                    if (_subscriptions == null || !_subscriptions.TryGetValue(parsed.Event, out var callbacks))
                     {
                         continue;
                     }
@@ -221,6 +236,23 @@ namespace VirtualMaker.RPC
                     Debug.LogException(e);
                 }
             }
+        }
+
+        private void CancelProcessQueue()
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+        }
+
+        public void Dispose()
+        {
+            CancelProcessQueue();
+            GC.SuppressFinalize(this);
+        }
+
+        ~UnityRpc()
+        {
+            CancelProcessQueue();
         }
     }
 }

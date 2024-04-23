@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace VirtualMaker.RPC
 {
-    internal interface IUnityRpcTransport
+    public interface IUnityRpcTransport
     {
         ConcurrentQueue<string> ReceiveQueue { get; }
         void SendMessage(string message);
