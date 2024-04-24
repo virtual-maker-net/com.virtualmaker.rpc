@@ -1,0 +1,26 @@
+{
+  "name": "com.virtualmaker.rpc",
+  "displayName": "VirtualMaker.RPC",
+  "description": "A Bidirectional RPC package for Unity (UPM)",
+  "keywords": [],
+  "version": "1.0.0-preview.1",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/virtual-maker-net/com.virtualmaker.rpc#documentation",
+  "changelogUrl": "https://github.com/virtual-maker-net/com.virtualmaker.rpc/releases",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "repository": "https://github.com/virtual-maker-net/com.virtualmaker.rpc.git"
+  },
+  "author": {
+    "name": "Virtual Maker",
+    "url": "https://www.virtualmaker.net"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "2.0.0",
+    "com.utilities.async": "2.1.5"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  }
+}
