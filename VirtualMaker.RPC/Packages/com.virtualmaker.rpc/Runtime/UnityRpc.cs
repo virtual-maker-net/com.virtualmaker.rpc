@@ -47,8 +47,19 @@ namespace VirtualMaker.RPC
         public UnityRpc(IUnityRpcTransport transport)
         {
             _transport = transport;
+        }
+
+        public void Start()
+        {
+            if (_cancellationTokenSource != null) { Stop(); }
             _cancellationTokenSource = new CancellationTokenSource();
             ProcessQueue(_cancellationTokenSource.Token);
+        }
+
+        public void Stop()
+        {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
         }
 
         public Task<T> CallAsync<T>(string evt, params object[] args)
@@ -94,36 +105,6 @@ namespace VirtualMaker.RPC
             callbacks.Add(callback);
         }
 
-        public void Subscribe<T>(string evt, Action<T> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
-        public void Subscribe<T1, T2>(string evt, Action<T1, T2> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
-        public void Subscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
-        public void CreateRpc<T, TResult>(string evt, Func<T, TResult> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
-        public void CreateRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
-        public void CreateRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
-        {
-            SubscribeDelegate(evt, callback);
-        }
-
         public void UnsubscribeDelegate(string evt, Delegate callback)
         {
             if (_subscriptions == null)
@@ -139,35 +120,41 @@ namespace VirtualMaker.RPC
             callbacks.Remove(callback);
         }
 
+        public void Subscribe<T>(string evt, Action<T> callback)
+            => SubscribeDelegate(evt, callback);
+
+        public void Subscribe<T1, T2>(string evt, Action<T1, T2> callback)
+            => SubscribeDelegate(evt, callback);
+
+        public void Subscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
+            => SubscribeDelegate(evt, callback);
+
+        public void CreateRpc<T, TResult>(string evt, Func<T, TResult> callback)
+            => SubscribeDelegate(evt, callback);
+
+        public void CreateRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
+            => SubscribeDelegate(evt, callback);
+
+        public void CreateRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
+            => SubscribeDelegate(evt, callback);
+
         public void Unsubscribe<T>(string evt, Action<T> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         public void Unsubscribe<T1, T2>(string evt, Action<T1, T2> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         public void Unsubscribe<T1, T2, T3>(string evt, Action<T1, T2, T3> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         public void RemoveRpc<T, TResult>(string evt, Func<T, TResult> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         public void RemoveRpc<T1, T2, TResult>(string evt, Func<T1, T2, TResult> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         public void RemoveRpc<T1, T2, T3, TResult>(string evt, Func<T1, T2, T3, TResult> callback)
-        {
-            UnsubscribeDelegate(evt, callback);
-        }
+            => UnsubscribeDelegate(evt, callback);
 
         private async void ProcessQueue(CancellationToken cancellationToken)
         {
@@ -175,6 +162,8 @@ namespace VirtualMaker.RPC
                    !cancellationToken.IsCancellationRequested)
             {
                 await Awaiters.UnityMainThread;
+
+                if (cancellationToken.IsCancellationRequested) { return; }
 
                 try
                 {
@@ -238,21 +227,15 @@ namespace VirtualMaker.RPC
             }
         }
 
-        private void CancelProcessQueue()
-        {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
-        }
-
         public void Dispose()
         {
-            CancelProcessQueue();
+            Stop();
             GC.SuppressFinalize(this);
         }
 
         ~UnityRpc()
         {
-            CancelProcessQueue();
+            Stop();
         }
     }
 }
