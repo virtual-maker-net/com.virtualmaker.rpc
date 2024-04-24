@@ -1,0 +1,16 @@
+{
+    "name": "VirtualMaker.RPC",
+    "rootNamespace": "VirtualMaker.RPC",
+    "references": [
+        "GUID:a6609af893242c7438d701ddd4cce46a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
