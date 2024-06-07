@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace VirtualMaker.RPC
 {
-    internal class UnityRpcTransportWebGL : IUnityRpcTransport
+    public class UnityRpcTransportWebGL : IUnityRpcTransport
     {
         private static UnityRpcTransportWebGL _instance;
 
