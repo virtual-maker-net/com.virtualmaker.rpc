@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace VirtualMaker.RPC
 {
-    internal class UnityRpcTransportWebsocket : IUnityRpcTransport
+    public class UnityRpcTransportWebsocket : IUnityRpcTransport
     {
         public ConcurrentQueue<string> ReceiveQueue { get; } = new();
 
