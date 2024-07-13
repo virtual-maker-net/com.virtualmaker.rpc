@@ -36,11 +36,13 @@ namespace VirtualMaker.RPC
 
         public void SendMessage(string message)
         {
+            UnityRpcLog.Info($"[UnityRpcTransportWebGL] Send: {message}");
             UnityRpcTransportWebGLSend(message);
         }
 
         private void OnMessageInstance(string message)
         {
+            UnityRpcLog.Info($"[UnityRpcTransportWebGL] Receive: {message}");
             ReceiveQueue.Enqueue(message);
         }
     }

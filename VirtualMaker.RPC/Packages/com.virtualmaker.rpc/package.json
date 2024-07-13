@@ -3,7 +3,7 @@
   "displayName": "VirtualMaker.RPC",
   "description": "A Bidirectional RPC package for Unity (UPM)",
   "keywords": [],
-  "version": "1.0.0-preview.1",
+  "version": "1.0.0-preview.3",
   "unity": "2021.3",
   "documentationUrl": "https://github.com/virtual-maker-net/com.virtualmaker.rpc#documentation",
   "changelogUrl": "https://github.com/virtual-maker-net/com.virtualmaker.rpc/releases",
