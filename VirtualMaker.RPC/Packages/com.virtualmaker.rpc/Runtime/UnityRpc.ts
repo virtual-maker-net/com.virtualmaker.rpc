@@ -1,6 +1,6 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 interface UnityRpcMessage {
     event: string;
@@ -22,8 +22,7 @@ class UnityRpc {
         this.rpcId = 1;
         this.eventHandlers = {};
         this.rpcs = {};
-        this.window.addEventListener('merciv-unity-to-js', this.onUnityMessage.bind(this) as EventListener);
-        this.started.set(true);
+        this.window.addEventListener('unity-to-js', this.onUnityMessage.bind(this) as EventListener);
     }
 
     public async call<T>(event: string, ...args: any[]): Promise<T> {
@@ -59,12 +58,17 @@ class UnityRpc {
     }
 
     private send(message: UnityRpcMessage) {
-        const event = new CustomEvent('merciv-js-to-unity', { detail: JSON.stringify(message) });
+        const event = new CustomEvent('js-to-unity', { detail: JSON.stringify(message) });
         this.window?.dispatchEvent(event);
     }
 
     private onUnityMessage(event: CustomEvent<any>) { // Update the type of the event parameter
         const customEvent = event as CustomEvent<any>;
+
+        if (!get(this.started) && customEvent.detail === 'unity-ready') {
+            this.started.set(true);
+            return;
+        }
 
         const message = JSON.parse(customEvent.detail);
 

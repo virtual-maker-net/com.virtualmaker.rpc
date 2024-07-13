@@ -60,13 +60,16 @@ namespace VirtualMaker.RPC
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
-        public Task<T> CallAsync<T>(string evt, params object[] args)
+        public Task<T> CallAsync<T>(string func, params object[] args)
         {
+            UnityRpcLog.Info($"Calling function: {func}");
+
             var message = new Message
             {
-                Event = evt,
+                Event = func,
                 Args = args.Select(JToken.FromObject).ToArray(),
                 RpcId = _rpcId++
             };
@@ -84,6 +87,8 @@ namespace VirtualMaker.RPC
 
         public void RaiseEvent(string evt, params object[] args)
         {
+            UnityRpcLog.Info($"Raising event: {evt}");
+
             var message = new Message
             {
                 Event = evt,
@@ -96,6 +101,8 @@ namespace VirtualMaker.RPC
 
         public void SubscribeDelegate(string evt, Delegate callback)
         {
+            UnityRpcLog.Info($"Subscribing to event: {evt}");
+
             if (!_subscriptions.TryGetValue(evt, out var callbacks))
             {
                 callbacks = new List<Delegate>();
@@ -107,6 +114,8 @@ namespace VirtualMaker.RPC
 
         public void UnsubscribeDelegate(string evt, Delegate callback)
         {
+            UnityRpcLog.Info($"Unsubscribing from event: {evt}");
+
             if (_subscriptions == null)
             {
                 return;
@@ -158,12 +167,19 @@ namespace VirtualMaker.RPC
 
         private async void ProcessQueue(CancellationToken cancellationToken)
         {
-            while (_transport.ReceiveQueue.TryDequeue(out var message) &&
-                   !cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 await Awaiters.UnityMainThread;
 
-                if (cancellationToken.IsCancellationRequested) { return; }
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                if (!_transport.ReceiveQueue.TryDequeue(out var message))
+                {
+                    continue;
+                }
 
                 try
                 {
@@ -173,15 +189,18 @@ namespace VirtualMaker.RPC
                     {
                         if (_rpcs == null || !_rpcs.Remove(parsed.ResponseId.Value, out var callback))
                         {
+                            UnityRpcLog.Error($"No response callback found for RPC ID: {parsed.ResponseId}");
                             continue;
                         }
 
+                        UnityRpcLog.Info($"Calling response callback for RPC ID {parsed.ResponseId} with value {parsed.Args[0]}");
                         callback(parsed.Args[0]);
                         continue;
                     }
 
                     if (_subscriptions == null || !_subscriptions.TryGetValue(parsed.Event, out var callbacks))
                     {
+                        UnityRpcLog.Info($"No subscribers for event {parsed.Event}");
                         continue;
                     }
 
@@ -200,6 +219,7 @@ namespace VirtualMaker.RPC
                                 args[i] = arg.ToObject(parameter.ParameterType);
                             }
 
+                            UnityRpcLog.Info($"Calling subscriber with for event {parsed.Event} with RPC ID {parsed.RpcId} args {string.Join(", ", args)}");
                             var result = callback.DynamicInvoke(args);
 
                             if (result == null) { continue; }
@@ -211,18 +231,20 @@ namespace VirtualMaker.RPC
                                 ResponseId = parsed.RpcId
                             };
 
+                            UnityRpcLog.Info($"Responding to {parsed.Event} with RPC ID {parsed.RpcId} with value {result}");
+
                             var json = JsonConvert.SerializeObject(response);
                             _transport.SendMessage(json);
                         }
                         catch (Exception e)
                         {
-                            Debug.LogException(e);
+                            UnityRpcLog.Exception(e);
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException(e);
+                    UnityRpcLog.Exception(e);
                 }
             }
         }
