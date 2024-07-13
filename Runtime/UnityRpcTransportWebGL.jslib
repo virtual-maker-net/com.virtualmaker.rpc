@@ -17,6 +17,8 @@ const UnityRpcTransportWebGL = {
                 _free(buffer);
             }
         });
+
+        window.dispatchEvent(new CustomEvent('unity-to-js', { detail: 'unity-ready' }));
     },
 
     UnityRpcTransportWebGLSend: function(data) {
