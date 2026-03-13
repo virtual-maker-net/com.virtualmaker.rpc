@@ -23,6 +23,7 @@ class UnityRpc {
         this.eventHandlers = {};
         this.rpcs = {};
         this.window.addEventListener('unity-to-js', this.onUnityMessage.bind(this) as EventListener);
+        this.started.set(true);
     }
 
     public async call<T>(event: string, ...args: any[]): Promise<T> {
